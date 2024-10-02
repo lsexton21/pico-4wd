@@ -22,7 +22,8 @@ from machine import Pin
 VERSION = '1.3.0'
 print(f"[ Pico-4WD Car App Control {VERSION}]\n")
 
-LOG_FILE = "log.txt"
+# Wasn't printing to log.txt, but log2.txt worked.  ???
+LOG_FILE = "log2.txt"
 
 with open(LOG_FILE, "a") as log_f:
         log_f.write('\n> ')
@@ -30,6 +31,11 @@ with open(LOG_FILE, "a") as log_f:
         log_f.write('\n> ')
         log_f.write('New Log Started')
         log_f.write('\n> ')
+
+def log(msg):
+    with open(LOG_FILE, "a") as log_f:
+        log_f.write(f'\n> {msg}')
+        time.sleep(0.01)
 
 ''' -------------- Onboard led Config -------------'''
 onboard_led = Pin(25, Pin.OUT)
@@ -39,7 +45,7 @@ onboard_led = Pin(25, Pin.OUT)
 RECEIVE_PRINT = False
 
 '''Set name'''
-NAME = 'cool_hand_luk'
+NAME = 'cool_hand_luke'
 
 '''Configure wifi'''
 # AP Mode
@@ -72,7 +78,7 @@ OBSTACLE_AVOID_FORWARD_POWER = 30
 OBSTACLE_AVOID_TURNING_POWER = 50
 
 # hug_left
-HUG_LEFT_SCAN_ANGLE = 10
+HUG_LEFT_SCAN_ANGLE = 60
 HUG_LEFT_SCAN_STEP = 10
 HUG_LEFT_REFERENCE = 25   # distance referenece (cm)
 HUG_LEFT_FORWARD_POWER = 30
@@ -315,8 +321,7 @@ def hug_left():
     # scan
     if avoid_proc == 'scan':
         if not avoid_has_obstacle:
-            sonar.sonar_angle = 0
-            # sonar.set_sonar_scan_config(HUG_LEFT_SCAN_ANGLE, HUG_LEFT_SCAN_STEP)
+            sonar.set_sonar_scan_config(OBSTACLE_AVOID_SCAN_ANGLE, OBSTACLE_AVOID_SCAN_STEP)
             move_status = 'forward'
             car.move('forward', OBSTACLE_AVOID_FORWARD_POWER)
         else:
@@ -568,7 +573,7 @@ def on_receive(data):
     elif 'O' in data.keys() and data['O'] == True:
         if mode != 'obstacle avoid':
             mode = 'obstacle avoid'
-            sonar.set_sonar_reference(OBSTACLE_AVOID_REFERENCE)
+            sonar.set_sonar_reference(HUG_LEFT_REFERENCE)
             print(f"change mode to: {mode}")
     elif 'P' in data.keys() and data['P'] == True:
         if mode != 'follow':
@@ -646,8 +651,8 @@ def remote_handler():
             sonar_distance = sonar.get_distance_at(0)
             line_track()
         elif mode == 'obstacle avoid':
-            obstacle_avoid()
-            # hug_left()
+            # obstacle_avoid()
+            hug_left()
         elif mode == 'follow':
             follow()
 
